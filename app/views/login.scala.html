@@ -1,0 +1,8 @@
+@(login: Form[CreateLoginForm])(implicit request: MessagesRequestHeader)
+
+@import helper._
+
+@request.flash.get("success").map { key =>
+    @request.messages(key)
+}
+
