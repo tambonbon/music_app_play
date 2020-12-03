@@ -1,30 +1,28 @@
 package dao
 
-import javax.inject.Inject
 import models.Users
-import play.api.db.slick.DatabaseConfigProvider
-import slick.jdbc.JdbcProfile
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.collection.mutable
 
-@Singleton()
-class UsersDAO @Inject() (dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) {
-  val dbConfig = dbConfigProvider.get[JdbcProfile]
-  import dbConfig._
-  import profile.api._
+object UsersDAO {
 
-  private class UsersTable(tag: Tag) extends Table[Users] (tag, "users") {
-   def username = column[String]("username", O.PrimaryKey, O.Unique)
-   def password = column[String]("password")
+  private val users = mutable.Map(
+    "Werner" -> Users("Werner", "werner"),
+    "Daniel" -> Users("Daniel", "daniel")
+  )
 
-   def * = (username, password) <> ((Users.apply _).tupled, Users.unapply)
+  def getUser(username: String): Option[Users] = {
+    users.get(username)
   }
-  private val users = TableQuery[UsersTable]
 
-  def getUser(username: String): Future[Option[Users]] = {
-    dbConfig.db.run(users.filter(_.username === username).result.headOption)
+  def addUser(username: String, password: String): Option[Users] = {
+    if(users.contains(username)) {
+      Option.empty
+    } else {
+      val user = Users(username, password)
+      users.put(username, user)
+      Option(user)
+    }
   }
-  def addUser(username: String, password: String): Future[Users] = dbConfig.db.run {
-    (users += Users(username, password)).map(_ => Users(username, password))
-  }
+
 }
