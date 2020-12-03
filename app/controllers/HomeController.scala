@@ -2,7 +2,7 @@ package controllers
 
 import java.time.LocalDateTime
 
-import dao.{TokenDAO, UsersDAO}
+import dao.{SessionDAO, UsersDAO}
 import javax.inject._
 import models.{AuthenticateAction, AuthenticateRequest, Users}
 import play.api.mvc._
@@ -20,7 +20,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   private def retreiveUser(request: RequestHeader): Option[Users] = {
     val tokenOpt = request.session.get("sessionToken") // get cookies to keep token for sessions
       (tokenOpt
-      .flatMap(token => TokenDAO.getToken(token))
+      .flatMap(token => SessionDAO.getToken(token))
       .filter(_.expiration.isAfter(LocalDateTime.now()))
       .map(_.username)
       .flatMap(UsersDAO.getUser)
@@ -42,9 +42,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 
   def login(username: String, password: String) = Action { implicit request: Request[AnyContent] =>
     if (isValidLogin(username, password)) {
-      val token = TokenDAO.generateToken(username)
+//      val token = SessionDAO.generateToken(username)
       // Here it should redirect to where you want
-      Redirect(routes.HomeController.index()).withSession(request.session + ("sessionToken" -> token))
+      Redirect(routes.HomeController.index()).withSession(request.session )
     } else {
       Unauthorized(views.html.defaultpages.unauthorized()).withNewSession
     }
