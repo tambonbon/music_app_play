@@ -2,9 +2,10 @@ package controllers
 
 import java.time.LocalDateTime
 
+import basicauth.{AuthenticateAction, AuthenticateRequest}
 import dao.{SessionDAO, UserDAO}
 import javax.inject._
-import models.{AuthenticateAction, AuthenticateRequest, User}
+import models.User
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext
@@ -39,7 +40,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   * Actions
   ************* */
   def index = Action { implicit request =>
-    Ok("Hello ")
+    Ok(views.html.index())
   }
 
   def loginBA(username: String, password: String) = authenticateAction { implicit request =>
@@ -56,7 +57,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     if (isValidLogin(username, password)) {
       val token = SessionDAO.generateToken(username)
       // Here it should redirect to where you want
-      Redirect(routes.HomeController.index()).withSession(request.session + ("token" -> token))
+      Redirect(routes.HomeController.index()).withSession(request.session + ("Username" -> token))
     } else {
       Unauthorized(views.html.defaultpages.unauthorized()).withNewSession
     }

@@ -13,17 +13,18 @@ class AuthenticatedUserAction @Inject() (parser: BodyParsers.Default)(implicit e
 
   override def invokeBlock[A](request: Request[A], block: (Request[A]) => Future[Result]) = {
     logger.debug("ENTERED AuthenticatedUserAction::invokeBlock")
-    val maybeUsername = request.session.get("USERNAME")
-    maybeUsername match {
-      case None => {
-        logger.debug("CAME INTO 'NONE'")
-        Future.successful(Forbidden("Dude, you’re not logged in."))
-      }
-      case Some(u) => {
-        logger.debug("CAME INTO 'SOME'")
-        val res: Future[Result] = block(request)
-        res
-      }
+    val userOpt = request.session.get("USERNAME")
+        userOpt match {
+          case None => {
+            logger.info("Invalid username")
+            Future.successful(Forbidden("Unsuccessful login"))
+          }
+          case Some(u) => {
+            logger.info("Valid username")
+            val res: Future[Result] = block(request)
+            res
+          }
+        }
     }
-  }
+
 }

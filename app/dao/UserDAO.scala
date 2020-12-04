@@ -6,7 +6,7 @@ import scala.collection.mutable
 
 class UserDAO  {
 
-  val users = mutable.Map( // should be private
+  private val users = mutable.Map( // should be private
     "Werner" -> User("Werner", "werner"),
     "Daniel" -> User("Daniel", "daniel")
   )

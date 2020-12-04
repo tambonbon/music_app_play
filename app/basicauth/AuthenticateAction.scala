@@ -1,9 +1,10 @@
-package models
+package basicauth
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneOffset}
 
 import dao.{SessionDAO, UserDAO}
 import javax.inject.Inject
+import models.User
 import play.api.mvc.{BodyParsers, _}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -16,14 +17,11 @@ class AuthenticateAction @Inject() (val parser: BodyParsers.Default,
   extends ActionBuilder[AuthenticateRequest, AnyContent] // take Request as input, and thus can build actions
     with ActionTransformer[Request, AuthenticateRequest]  { // change the request, for example by adding additional information
 
-  private val logger = play.api.Logger(this.getClass)
-
   def transform[A](request: Request[A]) = Future.successful {
-    logger.info("Calling Action")
     val tokenOpt = request.session.get("Username")
     val user = tokenOpt
       .flatMap(tk => SessionDAO.getToken(tk))
-      .filter(_.expiration.isAfter(LocalDateTime.now()))
+      .filter(_.expiration.isAfter(LocalDateTime.now(ZoneOffset.UTC)))
       .map(_.username)
       .flatMap(userDAO.getUser)
 
