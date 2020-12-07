@@ -15,7 +15,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class HomeController @Inject()(cc: MessagesControllerComponents,
                               userDAO: UserDAO,
-                              auth: AuthenticateAction,
                               authenticateAction: AuthenticateAction,
                               albumDAO: AlbumDAO)(implicit ec: ExecutionContext)
   extends MessagesAbstractController(cc) with Logging {
@@ -77,7 +76,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     withUser(user => Ok(views.html.prive(user)))
   }
 
-  def privateRequest() = auth { authRequest: AuthenticateRequest[AnyContent] =>
+  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
     Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
   }
 
