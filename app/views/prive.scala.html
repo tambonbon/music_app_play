@@ -1,5 +1,26 @@
+@import views.html.helper.form
+@import views.html.helper.inputText
+@import views.html.helper.CSRF
 @(user: User)
-    @main("This is a private page") {
+@*(albums: Form[Albums])*@
+@*(implicit requestHeader: MessagesRequestHeader)*@
+@*
+@requestHeader.flash.get("success").map { key =>
+    @requestHeader.messages(key)
+}
+*@
+@main("This is a private page") {
         <h1>This is a private page</h1>
         <p>Current user: <strong>@user.username</strong> </p>
+    <li><a href=@routes.HomeController.addAlbum()>Add album here</a></li>
+@*        @form(routes.HomeController.addAlbums()) {*@
+@*            @inputText(albums("artist"))*@
+@*            @inputText(albums("name"))*@
+@*            @inputText(albums("genre"))*@
+@*            @CSRF.formField*@
+
+@*            <div class="buttons">*@
+@*                <input type="submit" value="Add Person"/>*@
+@*            </div>*@
+@*        }*@
     }

@@ -3,19 +3,23 @@ package controllers
 import java.time.LocalDateTime
 
 import basicauth.{AuthenticateAction, AuthenticateRequest}
-import dao.{SessionDAO, UserDAO}
+import dao.{AlbumDAO, SessionDAO, UserDAO}
 import javax.inject._
-import models.User
+import models.{Albums, User}
+import play.api.Logging
+import play.api.libs.json.Json
 import play.api.mvc._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
+
 class HomeController @Inject()(cc: MessagesControllerComponents,
                               userDAO: UserDAO,
                               auth: AuthenticateAction,
-                              authenticateAction: AuthenticateAction)(implicit ec: ExecutionContext)
-  extends MessagesAbstractController(cc) {
+                              authenticateAction: AuthenticateAction,
+                              albumDAO: AlbumDAO)(implicit ec: ExecutionContext)
+  extends MessagesAbstractController(cc) with Logging {
+
 
   /**
    * Retreive user from request from in-memory Map of users
@@ -77,8 +81,6 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
   }
 
-
-
   /*
  * Check authentication for simple auth
  * */
@@ -91,6 +93,27 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   }
   // login for simple auth
   def loginAuth(username: String, password: String) = authenticateRequest(username, password) { user:User => Ok(s"hello ${user.username}") }
+
+  /**
+   * Actions for users
+   * */
+  def addAlbum() = Action.async{ implicit request =>
+    Albums.albumsForm.bindFromRequest.fold(
+      errorForm => {
+        logger.warn(s"Form submission with error: ${errorForm.errors}")
+        Future.successful( Ok(views.html.form(Albums.albumsForm)))
+      },
+      data => {
+        val newAlbum = Albums(data.artist, data.name, data.genre, data.songs)
+        albumDAO.add(newAlbum).map(_ => Redirect(routes.HomeController.privateRequest()))
+      }
+    )
+  }
+
+  def getAlbums() = Action.async { implicit request =>
+    albumDAO.all().map (alb => Ok(Json.toJson(alb)))
+  }
 }
 
 case class CreateLoginForm(username: String, password: String)
+case class CreateAlbumForm(artist: String, name: String, genre: String, title: String, duration: String )
