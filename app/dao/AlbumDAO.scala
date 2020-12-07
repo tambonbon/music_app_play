@@ -25,10 +25,10 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
         title, duration
       )
     ).shaped <> (
-      { case (artist, name, genre, songs) => Albums(artist, name, genre, (Songs.apply _).tupled.apply(songs)) //Using .tupled method when companion object is in class
+      { case (artist, name, genre, songs) => Albums(artist, name, genre, Seq((Songs.apply _).tupled.apply(songs))) //Using .tupled method when companion object is in class
       },
       { alb: Albums =>
-        def f(songs: Songs) = Songs.unapply(songs).get
+        def f(songs: Seq[Songs]) = Songs.unapply(songs.head).get // this is prone to error
         Some((alb.artist, alb.name, alb.genre, f(alb.songs)))
       }
     )
