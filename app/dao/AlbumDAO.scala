@@ -54,8 +54,8 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
     albums.result
   }
 
-  def add(album: Albums): Future[Unit] = dbConfig.db.run{
-    (albums += album).map(_ => ())
+  def add(album: Albums): Future[String] = dbConfig.db.run{
+    (albums += album).map(result => "Album successfully added")
   }
 
   def get(artist: String, name: String): Future[Option[Albums]] =  dbConfig.db.run {

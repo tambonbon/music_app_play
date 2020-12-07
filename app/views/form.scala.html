@@ -1,6 +1,6 @@
-@import views.html.helper.inputText
 @(albums: Form[Albums])(implicit request: MessagesRequestHeader)
 
+@import views.html.helper.inputText
 
 @request.flash.get("success").map { key =>
     @request.messages(key)
