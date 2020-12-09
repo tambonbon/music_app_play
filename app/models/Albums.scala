@@ -1,39 +1,22 @@
 package models
 
+import controllers.CreateAlbumForm
 import play.api.data.Form
-import play.api.data.Forms.{mapping, seq, text}
-import play.api.libs.functional.syntax._
-import play.api.libs.json.{JsPath, Reads, Writes}
+import play.api.data.Forms.{mapping, text}
+import play.api.libs.json.Json
 
-case class Albums(artist: String, name: String, genre: String, songs: Seq[Songs])
+case class Albums(id: Int, artist: String, name: String, genre: String)
 
 object Albums {
-  implicit val albumsReads: Reads[Albums] = (
-    (JsPath \ "artist").read[String] and
-    (JsPath \ "name").read[String] and
-    (JsPath \ "genre").read[String] and
-    (JsPath \ "songs").read[Seq[Songs]]
-  )(Albums.apply _)
+  implicit val albumsFormat = Json.format[Albums]
 
-  implicit val albumsWrites: Writes[Albums] = (
-    (JsPath \ "artist").write[String] and
-      (JsPath \ "name").write[String] and
-      (JsPath \ "genre").write[String] and
-      (JsPath \ "songs").write[Seq[Songs]]
-    )(unlift((Albums.unapply)))
-
-  val albumsForm: Form[Albums] = Form (
+  val albumsForm: Form[CreateAlbumForm] = Form (
     mapping(
       "artist" -> text,
       "name" -> text,
       "genre" -> text,
-      "songs" -> seq(
-        mapping(
-          "title" -> text,
-          "duration" -> text
-        )(Songs.apply)(Songs.unapply)
-       )
-    )(Albums.apply)(Albums.unapply)
+
+    )(CreateAlbumForm.apply)(CreateAlbumForm.unapply)
   )
 
 }

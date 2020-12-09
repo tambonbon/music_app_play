@@ -1,1 +1,3 @@
 # https://www.playframework.com/documentation/latest/ScalaI18N
+
+album.created = You have successfully created an album!

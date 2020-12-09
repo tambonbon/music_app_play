@@ -13,40 +13,35 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
   import profile.api._
 
   private class AlbumTable(tag: Tag) extends Table[Albums](tag, "albums"){
-    def artist = column[String]("artist", O.PrimaryKey)
+    def id = column[Int]("id", O.PrimaryKey)
+    def artist = column[String]("artist")
     def name = column[String]("name")
     def genre = column[String]("genre")
 
+    def * = (id, artist, name, genre) <> ((Albums.apply _).tupled, Albums.unapply)
+  }
+  private val albums = TableQuery[AlbumTable]
+
+  private class SongTable(tag: Tag) extends Table[Songs](tag, "songs"){
+    def id = column[Int]("id", O.PrimaryKey)
     def title = column[String]("title")
     def duration = column[String]("duration")
 
-    def * = (
-      artist, name, genre, (
-        title, duration
-      )
-    ).shaped <> (
-      { case (artist, name, genre, songs) => Albums(artist, name, genre, Seq((Songs.apply _).tupled.apply(songs))) //Using .tupled method when companion object is in class
-      },
-      { alb: Albums =>
-        def f(songs: Seq[Songs]) = Songs.unapply(songs.head).get // this is prone to error
-        Some((alb.artist, alb.name, alb.genre, f(alb.songs)))
-      }
-    )
-//    def songs = (title.?, duration.?).<>[Seq[Songs], String, String] (
-//      { mappedSongs =>
-//        mappedSongs match {
-//          case (maybeString, maybeString1) => Seq.fill(1)(Songs(maybeString, maybeString1))
-//          case _ => Seq.fill(1)(Songs(None,None))
-//        }
-//      },
-//      {result => (result.map(_.name), result.map(_.duration))
-//
-//      }
-//    )
+    def * = (id, title, duration) <> ((Songs.apply _).tupled, Songs.unapply)
   }
+  private val songs  = TableQuery[SongTable]
 
-  private val albums = TableQuery[AlbumTable]
+  val thriller = Albums(1, "MJ", "Thriller", "Pop")
+  val thrillerSongs = Songs(1, "Thriller", "03:20")
 
+  val setup = DBIO.seq(
+      (albums.schema ++ songs.schema).create,
+
+      albums += thriller,
+      songs  += thrillerSongs
+    )
+
+  val setupDB = db.run(setup)
   /*
   * List all of the albums in the database
   * */
@@ -54,8 +49,16 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
     albums.result
   }
 
-  def add(album: Albums): Future[String] = dbConfig.db.run{
-    (albums += album).map(result => "Album successfully added")
+  def allSongs(): Future[Seq[Songs]] = dbConfig.db.run{
+    songs.result
+  }
+
+  def add(artist: String, name: String, genre: String): Future[Albums] = dbConfig.db.run{
+    (albums.map(alb => (alb.artist, alb.name, alb.genre))
+      returning albums.map(_.id)
+      into ((theRest, id) => Albums(id, theRest._1, theRest._2, theRest._3))
+      ) += (artist, name, genre)
+//    (albums += album).map(result => "Album successfully added")
   }
 
   def get(artist: String, name: String): Future[Option[Albums]] =  dbConfig.db.run {

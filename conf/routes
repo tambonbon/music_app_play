@@ -6,14 +6,15 @@
 # An example controller showing a sample home page
 GET     /                           controllers.HomeController.index
 GET     /login                      controllers.HomeController.login(username, password)
-GET     /loginBA                    controllers.HomeController.loginBA(username, password)
+#GET     /loginBA                    controllers.HomeController.loginBA(username, password)
 GET     /loginauth                  controllers.HomeController.loginAuth(username, password)
-GET     /privAction                    controllers.HomeController.privateRequest()
-GET     /priv                    controllers.HomeController.priv()
+#GET     /privAction                    controllers.HomeController.privateRequest()
+#GET     /priv                    controllers.HomeController.priv()
 
-GET     /add                       controllers.HomeController.addAlbum()
-POST    /add                        controllers.HomeController.addAlbum()
+GET     /add                       controllers.HomeController.addForm
+POST    /add                        controllers.HomeController.addAlbum
 
-GET     /albums                      controllers.HomeController.getAlbums()
+GET     /albums                      controllers.HomeController.getAlbums
+GET     /songs                       controllers.HomeController.getSongs()
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

@@ -2,7 +2,7 @@ package controllers
 
 import java.time.LocalDateTime
 
-import basicauth.{AuthenticateAction, AuthenticateRequest}
+import basicauth.AuthenticateAction
 import dao.{AlbumDAO, SessionDAO, UserDAO}
 import javax.inject._
 import models.{Albums, User}
@@ -46,15 +46,15 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     Ok(views.html.index())
   }
 
-  def loginBA(username: String, password: String) = authenticateAction { implicit request =>
-    privateRequest()
-    if (isValidLogin(username, password)) {
-      // Here it should redirect to where you want
-      Redirect(routes.HomeController.index())
-    } else {
-      Unauthorized(views.html.defaultpages.unauthorized())
-    }
-  }
+//  def loginBA(username: String, password: String) = authenticateAction { implicit request =>
+//    privateRequest()
+//    if (isValidLogin(username, password)) {
+//      // Here it should redirect to where you want
+//      Redirect(routes.HomeController.index())
+//    } else {
+//      Unauthorized(views.html.defaultpages.unauthorized())
+//    }
+//  }
 
   def login(username: String, password: String) = Action { implicit request: Request[AnyContent] =>
     if (isValidLogin(username, password)) {
@@ -72,13 +72,13 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
       .getOrElse(Unauthorized(views.html.defaultpages.unauthorized()))
   }
 
-  def priv() = Action { implicit request: Request[AnyContent] =>
-    withUser(user => Ok(views.html.prive(user)))
-  }
-
-  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
-    Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
-  }
+//  def priv() = Action { implicit request: Request[AnyContent] =>
+//    withUser(user => Ok(views.html.prive(user)))
+//  }
+//
+//  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
+//    Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
+//  }
 
   /*
  * Check authentication for simple auth
@@ -96,23 +96,34 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   /**
    * Actions for users
    * */
-  def addAlbum() = Action.async{ implicit request =>
-    Albums.albumsForm.bindFromRequest.fold(
-      errorForm => {
-        logger.warn(s"Form submission with error: ${errorForm.errors}")
-        Future.successful( Ok(views.html.form(Albums.albumsForm)))
-      },
-      data => {
-        val newAlbum = Albums(data.artist, data.name, data.genre, data.songs)
-        albumDAO.add(newAlbum).map(_ => Redirect(routes.HomeController.privateRequest()))
-      }
-    )
+
+  def addForm() = Action {implicit request =>
+    Ok(views.html.form(Albums.albumsForm))
   }
+  def addAlbum() = {
+    Action.async { implicit request =>
+      Albums.albumsForm.bindFromRequest.fold(
+        errorForm => {
+          logger.warn(s"Form submission with error: ${errorForm.errors}")
+          Future.successful(Ok(views.html.form(errorForm)))
+        },
+        data => {
+          albumDAO.add(data.artist, data.name, data.genre)
+          .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "album.created"))
+        }
+      )
+    }
+  }
+
 
   def getAlbums() = Action.async { implicit request =>
     albumDAO.all().map (alb => Ok(Json.toJson(alb)))
   }
+  def getSongs() = Action.async { implicit request =>
+    albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
+  }
 }
 
 case class CreateLoginForm(username: String, password: String)
-case class CreateAlbumForm(artist: String, name: String, genre: String, title: String, duration: String )
+case class CreateAlbumForm(artist: String, name: String, genre: String )
+case class CreateSongForm(title: String, duration: String )
