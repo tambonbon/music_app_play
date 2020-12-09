@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 import basicauth.AuthenticateAction
 import dao.{AlbumDAO, SessionDAO, UserDAO}
 import javax.inject._
-import models.{Albums, User}
+import models.{Albums, Songs, User}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -79,7 +79,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 //  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
 //    Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
 //  }
-
+//TODO Add authenticate again:
+// - Actions
+// - Forms
   /*
  * Check authentication for simple auth
  * */
@@ -97,19 +99,37 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
    * Actions for users
    * */
 
-  def addForm() = Action {implicit request =>
-    Ok(views.html.form(Albums.albumsForm))
+  def addAlbumForm() = Action { implicit request =>
+    Ok(views.html.albumForm(Albums.albumsForm))
   }
   def addAlbum() = {
     Action.async { implicit request =>
       Albums.albumsForm.bindFromRequest.fold(
         errorForm => {
           logger.warn(s"Form submission with error: ${errorForm.errors}")
-          Future.successful(Ok(views.html.form(errorForm)))
+          Future.successful(Ok(views.html.albumForm(errorForm)))
         },
         data => {
-          albumDAO.add(data.artist, data.name, data.genre)
+          albumDAO.addAlbum(data.artist, data.name, data.genre)
           .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "album.created"))
+        }
+      )
+    }
+  }
+
+  def addSongForm() = Action { implicit request =>
+    Ok(views.html.songForm(Songs.songsForm))
+  }
+  def addSong() = {
+    Action.async { implicit request =>
+      Songs.songsForm.bindFromRequest.fold(
+        errorForm => {
+          logger.warn(s"Form submission with error: ${errorForm.errors}")
+          Future.successful(Ok(views.html.songForm(errorForm)))
+        },
+        data => {
+          albumDAO.addSong(data.title, data.duration)
+            .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "songs.created"))
         }
       )
     }
@@ -117,7 +137,8 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 
 
   def getAlbums() = Action.async { implicit request =>
-    albumDAO.all().map (alb => Ok(Json.toJson(alb)))
+    albumDAO.allAlbums().map (alb => Ok(Json.toJson(alb)))
+//    albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
   }
   def getSongs() = Action.async { implicit request =>
     albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))

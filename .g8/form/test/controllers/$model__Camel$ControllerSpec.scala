@@ -12,7 +12,7 @@ import play.api.test.CSRFTokenHelper._
 import scala.concurrent.ExecutionContext
 
 /**
- * $model;format="Camel"$ form controller specs
+ * $model;format="Camel"$ albumForm controller specs
  */
 class $model;format="Camel"$ControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
 
@@ -57,7 +57,7 @@ class $model;format="Camel"$ControllerSpec extends PlaySpec with GuiceOneAppPerT
   }
 
   "$model;format="Camel"$Controller POST" should {
-    "process form" in {
+    "process albumForm" in {
       val request = {
         FakeRequest(POST, "/$model;format="camel"$")
           .withFormUrlEncodedBody("name" -> "play", "age" -> "4")

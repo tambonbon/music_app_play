@@ -1,0 +1,17 @@
+@import views.html.helper._
+@(albums: Form[CreateSongForm])(implicit request: MessagesRequestHeader)
+
+@request.flash.get("success").map { key =>
+    @request.messages(key)
+}
+
+@main("Add your album here") {
+    @helper.form(routes.HomeController.addSong()) {
+        @inputText(albums("title"))
+        @inputText(albums("duration"))
+        @CSRF.formField
+
+        <input type="submit" value="Submit">
+    }
+
+}

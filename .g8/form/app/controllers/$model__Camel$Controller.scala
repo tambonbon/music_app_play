@@ -15,7 +15,7 @@ POST    /$model;format="camel"$        controllers.$model;format="Camel"$Control
 */
 
 /**
- * $model;format="Camel"$ form controller for Play Scala
+ * $model;format="Camel"$ albumForm controller for Play Scala
  */
 class $model;format="Camel"$Controller @Inject()(mcc: MessagesControllerComponents) extends MessagesAbstractController(mcc) {
 
@@ -33,7 +33,7 @@ class $model;format="Camel"$Controller @Inject()(mcc: MessagesControllerComponen
   def $model;format="camel"$Post() = Action { implicit request: MessagesRequest[AnyContent] =>
     $model;format="camel"$Form.bindFromRequest.fold(
       formWithErrors => {
-        // binding failure, you retrieve the form containing errors:
+        // binding failure, you retrieve the albumForm containing errors:
         BadRequest(views.html.$model;format="camel"$.form(formWithErrors))
       },
       $model;format="camel"$Data => {
