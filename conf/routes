@@ -8,8 +8,8 @@ GET         /                    controllers.HomeController.index
 GET         /login               controllers.HomeController.login(username, password)
 #GET     /loginBA                    controllers.HomeController.loginBA(username, password)
 GET         /loginauth           controllers.HomeController.loginAuth(username, password)
-#GET     /privAction                    controllers.HomeController.privateRequest()
-#GET     /priv                    controllers.HomeController.priv()
+GET     /privAction                    controllers.HomeController.privateRequest()
+GET     /priv                    controllers.HomeController.priv()
 
 GET         /addAlbum            controllers.HomeController.addAlbumForm
 POST        /addAlbum            controllers.HomeController.addAlbum

@@ -70,11 +70,15 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
       into ((theRest, id) => Albums(id, theRest._1, theRest._2, theRest._3))
       ) += (artist, name, genre)
   }
-  def addSong(title: String, duration: String): Future[Songs] = dbConfig.db.run{
+  def addSong( title: String, duration: String): Future[Songs] = dbConfig.db.run{
     (songs.map(sng => (sng.title, sng.duration))
       returning songs.map(_.id)
       into ((theRest, id) => Songs(id, theRest._1, theRest._2))
       ) += (title, duration)
+  }
+
+  def normalized(albumID: Int, songID: Int): Future[Unit] = dbConfig.db.run{
+    (albumSongs += AlbumSong(albumID, songID)).map(_ => ())
   }
 
   def get(artist: String, name: String): Future[Option[Albums]] =  dbConfig.db.run {

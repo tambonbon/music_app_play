@@ -1,21 +1,8 @@
-@(user: User)(albums: Form[CreateAlbumForm])(implicit request: MessagesRequestHeader)
-    @import views.html.helper._
-
-    @request.flash.get("success").map { key =>
-        @request.messages(key)
-    }
-
+@(user: User)
 @main("This is a private page") {
     <h1>This is a private page</h1>
     <p>Current user: <strong>@user.username</strong> </p>
-}
-    @helper.form(routes.HomeController.addAlbum()) {
-        @inputText(albums("Artist"))
-        @inputText(albums("Album name"))
-        @inputText(albums("Genre"))
-        @CSRF.formField
-        <input type="submit" value="Submit">
-
+    <li><a href=@routes.HomeController.addAlbum()>Add album here</a></li>
     <li><a href=@routes.HomeController.getAlbums()>Your albums are here</a></li>
 @*        @albumForm(routes.HomeController.addAlbums()) {*@
 @*            @inputText(albums("artist"))*@

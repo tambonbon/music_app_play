@@ -2,7 +2,7 @@ package controllers
 
 import java.time.LocalDateTime
 
-import basicauth.AuthenticateAction
+import basicauth.{AuthenticateAction, AuthenticateRequest}
 import dao.{AlbumDAO, SessionDAO, UserDAO}
 import javax.inject._
 import models.{Albums, Songs, User}
@@ -72,16 +72,14 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
       .getOrElse(Unauthorized(views.html.defaultpages.unauthorized()))
   }
 
-//  def priv() = Action { implicit request: Request[AnyContent] =>
-//    withUser(user => Ok(views.html.prive(user)))
-//  }
+  def priv() = Action { implicit request: Request[AnyContent] =>
+    withUser(user => Ok(views.html.prive(user)))
+  }
 //
-//  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
-//    Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
-//  }
-//TODO Add authenticate again:
-// - Actions
-// - Forms
+  def privateRequest() = authenticateAction { authRequest: AuthenticateRequest[AnyContent] =>
+    Ok(views.html.prive(authRequest.user.get)) // will put endpoint here
+  }
+
   /*
  * Check authentication for simple auth
  * */
@@ -134,6 +132,11 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
       )
     }
   }
+  //TODO Implement normalized
+  // - Modify songForm
+  // - link key from albumID ---> songID (one-to-many relationship)
+  //TODO implement basic auth
+
 
 
   def getAlbums() = Action.async { implicit request =>
@@ -147,4 +150,4 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 
 case class CreateLoginForm(username: String, password: String)
 case class CreateAlbumForm(artist: String, name: String, genre: String )
-case class CreateSongForm(title: String, duration: String )
+case class CreateSongForm(title: String, duration: String)
