@@ -8,6 +8,7 @@ import slick.jdbc.JdbcProfile
 import scala.concurrent.{ExecutionContext, Future}
 
 class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext){
+
   private val dbConfig = dbConfigProvider.get[JdbcProfile]
   import dbConfig._
   import profile.api._
@@ -23,11 +24,11 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
   private val albums = TableQuery[AlbumTable]
 
   private class SongTable(tag: Tag) extends Table[Songs](tag, "songs"){
-    def id = column[Int]("id", O.PrimaryKey)
+    def songId = column[Int]("songId", O.PrimaryKey)
     def title = column[String]("title")
     def duration = column[String]("duration")
 
-    def * = (id, title, duration) <> ((Songs.apply _).tupled, Songs.unapply)
+    def * = (songId, title, duration) <> ((Songs.apply _).tupled, Songs.unapply)
   }
   private val songs  = TableQuery[SongTable]
 
@@ -35,7 +36,7 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
     def albumID = column[Int]("albumID")
     def songID = column[Int]("songID")
     def albumFK = foreignKey("album_fk", albumID, albums)(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
-    def songFK = foreignKey("song_fk", songID, songs)(_.id, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
+    def songFK = foreignKey("song_fk", songID, songs)(_.songId, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
     def pk = primaryKey("pk", (albumID, songID))
 
     def * = (albumID, songID) <> ((AlbumSong.apply _).tupled, AlbumSong.unapply)
@@ -72,7 +73,7 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
   }
   def addSong( title: String, duration: String): Future[Songs] = dbConfig.db.run{
     (songs.map(sng => (sng.title, sng.duration))
-      returning songs.map(_.id)
+      returning songs.map(_.songId)
       into ((theRest, id) => Songs(id, theRest._1, theRest._2))
       ) += (title, duration)
   }
@@ -81,7 +82,26 @@ class AlbumDAO @Inject()(dbConfigProvider: DatabaseConfigProvider)(implicit ec: 
     (albumSongs += AlbumSong(albumID, songID)).map(_ => ())
   }
 
+  def findAll(): Future[Seq[(Albums, Seq[Songs])]] = {
+    val query = albums
+      .join(albumSongs).on(_.id === _.albumID)
+      .join(songs).on(_._2.songID === _.songId)
+
+    dbConfig.db.run(query.result).map { alb =>
+      alb.groupBy(_._1._1.id).map { case (_, value) =>
+      val ((album, albumSong), _) = value.head
+      val songs = value.map(_._2)
+        (album, songs)
+      }.toSeq
+    }
+  }
+
+
   def get(artist: String, name: String): Future[Option[Albums]] =  dbConfig.db.run {
     albums.filter(alb => alb.artist === artist && alb.name === name).result.headOption
+  }
+
+  def getMostRecentSong: Future[Int] = dbConfig.db.run {
+    songs.sortBy(_.songId.desc).take(1).map(_.songId).result.head
   }
 }

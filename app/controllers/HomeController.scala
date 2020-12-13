@@ -10,7 +10,9 @@ import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationDouble
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.language.postfixOps
 
 
 class HomeController @Inject()(cc: MessagesControllerComponents,
@@ -127,16 +129,22 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
         },
         data => {
           albumDAO.addSong(data.title, data.duration)
+          albumDAO.normalized(1, // TODO: Change this to current album
+            Await.result(albumDAO.getMostRecentSong ,0.1 seconds)) // THIS IS NOT RECOMMENDED
             .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "songs.created"))
         }
       )
     }
   }
+
   //TODO Implement normalized
   // - Modify songForm
   // - link key from albumID ---> songID (one-to-many relationship)
   //TODO implement basic auth
 
+  def link() = Action.async { implicit request =>
+    albumDAO.findAll().map(alb => Ok(Json.toJson(alb)))
+  }
 
 
   def getAlbums() = Action.async { implicit request =>
