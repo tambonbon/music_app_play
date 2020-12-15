@@ -3,7 +3,7 @@ package controllers
 import java.time.LocalDateTime
 
 import basicauth.{AuthenticateAction, AuthenticateRequest}
-import dao.{AlbumDAO, SessionDAO, UserDAO}
+import dao._
 import javax.inject._
 import models.{Albums, Songs, User}
 import play.api.Logging
@@ -18,7 +18,9 @@ import scala.language.postfixOps
 class HomeController @Inject()(cc: MessagesControllerComponents,
                               userDAO: UserDAO,
                               authenticateAction: AuthenticateAction,
-                              albumDAO: AlbumDAO)(implicit ec: ExecutionContext)
+                              albumDAO: AlbumDAOImpl,
+                              songDAO: SongDAOImpl,
+                              albumSongDAO: AlbumSongImpl)(implicit ec: ExecutionContext)
   extends MessagesAbstractController(cc) with Logging {
 
 
@@ -128,9 +130,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
           Future.successful(Ok(views.html.songForm(errorForm)))
         },
         data => {
-          albumDAO.addSong(data.title, data.duration)
-          albumDAO.normalized(1, // TODO: Change this to current album
-            Await.result(albumDAO.getMostRecentSong ,0.1 seconds)) // THIS IS NOT RECOMMENDED
+          songDAO.addSong(data.title, data.duration)
+          albumSongDAO.normalized(1, // TODO: Change this to current album
+            Await.result(songDAO.getMostRecentSong ,0.1 seconds)) // THIS IS NOT RECOMMENDED
             .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "songs.created"))
         }
       )
@@ -143,7 +145,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   //TODO implement basic auth
 
   def link() = Action.async { implicit request =>
-    albumDAO.findAll().map(alb => Ok(Json.toJson(alb)))
+    albumSongDAO.findAll().map(alb => Ok(Json.toJson(alb)))
   }
 
 
@@ -152,7 +154,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 //    albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
   }
   def getSongs() = Action.async { implicit request =>
-    albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
+    songDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
   }
 }
 
