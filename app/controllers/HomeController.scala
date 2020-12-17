@@ -1,6 +1,6 @@
 package controllers
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, LocalTime}
 
 import basicauth.{AuthenticateAction, AuthenticateRequest}
 import dao._
@@ -20,7 +20,8 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
                               authenticateAction: AuthenticateAction,
                               albumDAO: AlbumDAOImpl,
                               songDAO: SongDAOImpl,
-                              albumSongDAO: AlbumSongImpl)(implicit ec: ExecutionContext)
+                              albumSongDAO: AlbumSongImpl,
+                              playingDAO: PlayingDAOImpl)(implicit ec: ExecutionContext)
   extends MessagesAbstractController(cc) with Logging {
 
 
@@ -113,7 +114,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
         },
         data => {
           albumDAO.addAlbum(data.artist, data.name, data.genre)
-          .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "album.created"))
+          .map(_ => Redirect(routes.HomeController.addSong()).flashing("success" -> "album.created"))
         }
       )
     }
@@ -122,7 +123,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   def addSongForm() = Action { implicit request =>
     Ok(views.html.songForm(Songs.songsForm))
   }
-  def addSong() = {
+  def addSong = {
     Action.async { implicit request =>
       Songs.songsForm.bindFromRequest.fold(
         errorForm => {
@@ -131,9 +132,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
         },
         data => {
           songDAO.addSong(data.title, data.duration)
-          albumSongDAO.normalized(1, // TODO: Change this to current album
+          albumSongDAO.normalized(Await.result(albumDAO.getMostRecentAlbum, 0.1 seconds), // TODO: Change this to current album
             Await.result(songDAO.getMostRecentSong ,0.1 seconds)) // THIS IS NOT RECOMMENDED
-            .map(_ => Redirect(routes.HomeController.index()).flashing("success" -> "songs.created"))
+            .map(_ => Redirect(routes.HomeController.addSong()).flashing("success" -> "songs.created"))
         }
       )
     }
@@ -143,16 +144,27 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   // - Modify songForm
   // - link key from albumID ---> songID (one-to-many relationship)
   //TODO implement basic auth
+  // - make private db/space for each user
 
   def link() = Action.async { implicit request =>
     albumSongDAO.findAll().map(alb => Ok(Json.toJson(alb)))
   }
 
+//  def artistAndSong() = Action.async{ implicit request =>
+//    albumSongDAO.artistAndSong().map(play => Ok(Json.toJson(play)))
+//  }
+
+  // TODO: implement playing songs
+
+
+  def timeListened() = Action.async { implicit request =>
+    albumSongDAO.timeListened().map(time => Ok(Json.toJson(time)))
+  }
 
   def getAlbums() = Action.async { implicit request =>
     albumDAO.allAlbums().map (alb => Ok(Json.toJson(alb)))
-//    albumDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
   }
+
   def getSongs() = Action.async { implicit request =>
     songDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
   }
@@ -160,4 +172,4 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 
 case class CreateLoginForm(username: String, password: String)
 case class CreateAlbumForm(artist: String, name: String, genre: String )
-case class CreateSongForm(title: String, duration: String)
+case class CreateSongForm(title: String, duration: LocalTime)

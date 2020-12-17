@@ -5,8 +5,10 @@ services:
     ports:
       - "9000:9000"
   db:
-    image: library/postgres:9.4
+    image: postgres
     volumes:
       - ./data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: postgres
+    ports:
+    - "5432:5432"

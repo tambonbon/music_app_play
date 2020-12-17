@@ -48,8 +48,6 @@ class AlbumDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvi
     albums.result
   }
 
-
-
   def addAlbum(artist: String, name: String, genre: String): Future[Albums] = dbConfig.db.run{
     (albums.map(alb => (alb.artist, alb.name, alb.genre))
       returning albums.map(_.id)
@@ -57,12 +55,12 @@ class AlbumDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvi
       ) += (artist, name, genre)
   }
 
-
-
-
   def getAlbum(artist: String, name: String): Future[Option[Albums]] =  dbConfig.db.run {
     albums.filter(alb => alb.artist === artist && alb.name === name).result.headOption
   }
 
+  def getMostRecentAlbum: Future[Int] = dbConfig.db.run {
+    albums.sortBy(_.id.desc).take(1).map(_.id).result.head
+  }
 
 }

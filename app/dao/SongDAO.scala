@@ -1,5 +1,7 @@
 package dao
 
+import java.time.LocalTime
+
 import com.google.inject.ImplementedBy
 import javax.inject.{Inject, Singleton}
 import models.Songs
@@ -14,7 +16,7 @@ trait SongComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   class SongTable(tag: Tag) extends Table[Songs](tag, "songs"){
     def songId = column[Int]("songId", O.PrimaryKey)
     def title = column[String]("title")
-    def duration = column[String]("duration")
+    def duration = column[LocalTime]("duration")
 
     def * = (songId, title, duration) <> ((Songs.apply _).tupled, Songs.unapply)
   }
@@ -23,7 +25,7 @@ trait SongComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
 @ImplementedBy(classOf[SongDAOImpl])
 trait SongDAO {
   def allSongs(): Future[Seq[Songs]]
-  def addSong( title: String, duration: String): Future[Songs]
+  def addSong( title: String, duration: LocalTime): Future[Songs]
   def getMostRecentSong: Future[Int]
 }
 
@@ -37,7 +39,7 @@ class SongDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
   def allSongs(): Future[Seq[Songs]] = dbConfig.db.run{
     songs.result
   }
-  def addSong( title: String, duration: String): Future[Songs] = dbConfig.db.run{
+  def addSong( title: String, duration: LocalTime): Future[Songs] = dbConfig.db.run{
     (songs.map(sng => (sng.title, sng.duration))
       returning songs.map(_.songId)
       into ((theRest, id) => Songs(id, theRest._1, theRest._2))

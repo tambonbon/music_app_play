@@ -1,3 +1,4 @@
 # https://www.playframework.com/documentation/latest/ScalaI18N
 
 album.created = You have successfully created an album!
+songs.created = You have successfully added a song to your album!
