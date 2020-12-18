@@ -1,0 +1,17 @@
+@import views.html.helper._
+@(playing: Form[CreatePlayingForm])(implicit request: MessagesRequestHeader)
+
+@request.flash.get("success").map { key =>
+    @request.messages(key)
+}
+
+@main("What are you listening to?") {
+    @helper.form(routes.HomeController.playing()) {
+        @inputText(playing("artist"))
+        @inputText(playing("name"))
+        @CSRF.formField
+
+        <input type="submit" value="Submit">
+    }
+
+}

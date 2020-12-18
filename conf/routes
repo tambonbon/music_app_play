@@ -20,9 +20,9 @@ POST        /addSong             controllers.HomeController.addSong
 GET         /albums              controllers.HomeController.getAlbums
 GET         /songs               controllers.HomeController.getSongs()
 
-GET         /links               controllers.HomeController.link()
+GET         /all-albums               controllers.HomeController.all_albums()
 
-#GET         /playing               controllers.HomeController.playing()
+GET         /playing               controllers.HomeController.playing()
 
 GET         /time-listen         controllers.HomeController.timeListened()
 

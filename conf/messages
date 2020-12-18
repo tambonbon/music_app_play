@@ -2,3 +2,4 @@
 
 album.created = You have successfully created an album!
 songs.created = You have successfully added a song to your album!
+songs.played = You have successfully played a song!

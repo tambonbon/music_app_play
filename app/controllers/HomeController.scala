@@ -5,7 +5,7 @@ import java.time.{LocalDateTime, LocalTime}
 import basicauth.{AuthenticateAction, AuthenticateRequest}
 import dao._
 import javax.inject._
-import models.{Albums, Songs, User}
+import models.{Albums, Playing, Songs, User}
 import play.api.Logging
 import play.api.libs.json.Json
 import play.api.mvc._
@@ -146,13 +146,25 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   //TODO implement basic auth
   // - make private db/space for each user
 
-  def link() = Action.async { implicit request =>
+  def all_albums() = Action.async { implicit request =>
     albumSongDAO.findAll().map(alb => Ok(Json.toJson(alb)))
   }
 
 //  def artistAndSong() = Action.async{ implicit request =>
 //    albumSongDAO.artistAndSong().map(play => Ok(Json.toJson(play)))
 //  }
+
+  def playing() = Action.async{ implicit request =>
+    Playing.playingForm.bindFromRequest.fold(
+      errorForm => {
+        logger.warn(s"Form submission with error: ${errorForm.errors}")
+        Future.successful(Ok(views.html.playingForm(errorForm)))
+      },
+      data => {
+        playingDAO.addPlaying(data.artist, data.song).map(_ => Redirect(routes.HomeController.playing()).flashing("success" -> "songs.played"))
+      }
+    )
+  }
 
   // TODO: implement playing songs
 
@@ -173,3 +185,4 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 case class CreateLoginForm(username: String, password: String)
 case class CreateAlbumForm(artist: String, name: String, genre: String )
 case class CreateSongForm(title: String, duration: LocalTime)
+case class CreatePlayingForm(artist: String, song: String)

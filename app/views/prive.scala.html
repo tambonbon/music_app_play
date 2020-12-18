@@ -3,15 +3,8 @@
     <h1>This is a private page</h1>
     <p>Current user: <strong>@user.username</strong> </p>
     <li><a href=@routes.HomeController.addAlbum()>Add album here</a></li>
-    <li><a href=@routes.HomeController.link()>Your albums are here</a></li>
-@*        @albumForm(routes.HomeController.addAlbums()) {*@
-@*            @inputText(albums("artist"))*@
-@*            @inputText(albums("name"))*@
-@*            @inputText(albums("genre"))*@
-@*            @CSRF.formField*@
+    <li><a href=@routes.HomeController.all_albums()>Your albums are here</a></li>
+    <li><a href=@routes.HomeController.playing()>What are you listening?</a></li>
+    <li><a href=@routes.HomeController.timeListened()>Time Listened?</a></li>
 
-@*            <div class="buttons">*@
-@*                <input type="submit" value="Add Person"/>*@
-@*            </div>*@
-@*        }*@
     }

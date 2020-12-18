@@ -1,13 +1,15 @@
 package dao
 
 import com.google.inject.ImplementedBy
+import controllers.CreatePlayingForm
 import javax.inject.Inject
-import models.{CreatePlayingForm, Playing}
+import models.{ Playing}
 import play.api.data.Form
 import play.api.data.Forms.{mapping, text}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 import slick.lifted
+
 import scala.language.postfixOps
 import scala.concurrent.duration.DurationDouble
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -52,11 +54,13 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     mapping (
       "artist" -> text,
       "song" -> text// TODO: Add constraint so that it will only accept songs from the database
-    )(CreatePlayingForm.apply)(CreatePlayingForm.unapply).verifying(
-      fields => fields match {
-        case data => validate(data.artist, data.song).isCompleted
-      }
-    )
+    )(CreatePlayingForm.apply)(CreatePlayingForm.unapply)
+//      .verifying(
+//      fields => fields match {
+//        case data => validate(data.artist, data.song).isCompleted
+//        case _ =>
+//      }
+//    )
   )
 
   def hasArtist(artist: String): Future[Boolean] = dbConfig.db.run {
