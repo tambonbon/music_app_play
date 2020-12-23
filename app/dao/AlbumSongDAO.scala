@@ -34,6 +34,7 @@ trait AlbumSongComponent
 trait AlbumSongDAO {
   def normalized(albumID: Int, songID: Int): Future[Unit]
   def findAll(): Future[Seq[(Albums, Seq[Songs])]]
+  def artistAndSong(): Future[Map[String, List[String]]]
 }
 
 class AlbumSongImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
@@ -57,6 +58,22 @@ class AlbumSongImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProv
         val songs = value.map(_._2)
         (album, songs)
       }.toSeq
+    }
+  }
+
+  def artistAndSong(): Future[Map[String, List[String]]] = {
+    val query = albums
+      .join(albumSongs).on(_.id === _.albumID)
+      .join(songs).on(_._2.songID === _.songId)
+
+    dbConfig.db.run(query.result).map { alb =>
+      alb.groupBy(_._1._1.id).map { case (str, value) =>
+        val artist = value.map(_._1._1.artist).head
+        val songs   = value.map(_._2.title).toList
+        (artist -> songs)
+      }.toMap
+
+
     }
   }
 
@@ -84,7 +101,7 @@ class AlbumSongImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProv
       .join(songs).on(_._2.songID === _.songId)
 
     val b = dbConfig.db.run(query.result).map { alb =>
-      alb.groupBy(_._1._1.genre).map { case (str, value) =>
+      alb.groupBy(_._1._1.genre).map { case (str, value) => // TODO: Why genre?
         val duration = value.map(_._2.duration)
         val a = duration.reduce( (p,q) =>
           p.plusHours(q.getHour).plusMinutes(q.getMinute).plusSeconds(q.getSecond)

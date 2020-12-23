@@ -1,14 +1,28 @@
 @import views.html.helper._
-@(playing: Form[CreatePlayingForm])(implicit request: MessagesRequestHeader)
+@import dao.AlbumDAO
+@import scala.concurrent.Await
+@import scala.concurrent.duration.DurationDouble
+@import scala.language.postfixOps
+@import dao.AlbumSongDAO
+@(playing: Form[CreatePlayingForm], as: AlbumSongDAO)(implicit request: MessagesRequestHeader)
 
 @request.flash.get("success").map { key =>
     @request.messages(key)
 }
 
 @main("What are you listening to?") {
+
     @helper.form(routes.HomeController.playing()) {
-        @inputText(playing("artist"))
-        @inputText(playing("name"))
+        @select(playing("artist"), options{
+            val a = as.artistAndSong()
+            val b = Await.result(a, 0.1 seconds).keys
+            b.toList
+        })
+        @select(playing("song"), options{
+            val a = as.artistAndSong()
+            val b = Await.result(a, 0.1 seconds).values.flatten
+            b.toList
+        })
         @CSRF.formField
 
         <input type="submit" value="Submit">

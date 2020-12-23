@@ -3,16 +3,15 @@ package dao
 import com.google.inject.ImplementedBy
 import controllers.CreatePlayingForm
 import javax.inject.Inject
-import models.{ Playing}
+import models.Playing
 import play.api.data.Form
 import play.api.data.Forms.{mapping, text}
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
-import slick.lifted
 
-import scala.language.postfixOps
 import scala.concurrent.duration.DurationDouble
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.language.postfixOps
 
 trait PlayingComponent extends AlbumComponent with SongComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
@@ -23,9 +22,9 @@ trait PlayingComponent extends AlbumComponent with SongComponent { self: HasData
   class PlayingTable(tag: Tag) extends Table[Playing](tag, "playing") {
     def playingId = column[Int]("playingId", O.PrimaryKey)
     def artist = column[String]("artist")
-    def title = column[String]("title")
+    def song = column[String]("song")
 
-    def * = (playingId, artist, title) <> ((Playing.apply _).tupled, Playing.unapply)
+    def * = (playingId, artist, song) <> ((Playing.apply _).tupled, Playing.unapply)
   }
 }
 
@@ -38,7 +37,7 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   extends HasDatabaseConfigProvider[JdbcProfile] with PlayingComponent with PlayingDAO {
   import profile.api._
 
-  private val playings = lifted.TableQuery[PlayingTable]
+  private val playings = TableQuery[PlayingTable]
 
   def validate(artist: String, song: String) = Future.successful {
     if (Await.result(hasArtist(artist), 0.1 seconds)) { // AGAIN THIS IS NOT RECOMMENDED
@@ -55,12 +54,11 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       "artist" -> text,
       "song" -> text// TODO: Add constraint so that it will only accept songs from the database
     )(CreatePlayingForm.apply)(CreatePlayingForm.unapply)
-//      .verifying(
-//      fields => fields match {
-//        case data => validate(data.artist, data.song).isCompleted
-//        case _ =>
-//      }
-//    )
+      .verifying(
+      fields => fields match {
+        case data => validate(data.artist, data.song).isCompleted
+      }
+    )
   )
 
   def hasArtist(artist: String): Future[Boolean] = dbConfig.db.run {
@@ -74,7 +72,7 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   //  - it should validate the artist too (a song with same name but different singer)
 
   def addPlaying(artist: String, title: String): Future[Playing] = dbConfig.db.run {
-    (playings.map(plg => (plg.artist, plg.title))
+    (playings.map(plg => (plg.artist, plg.song))
       returning playings.map(_.playingId)
       into ((theRest, id) => Playing(id, theRest._1, theRest._2))
       ) += (artist, title)

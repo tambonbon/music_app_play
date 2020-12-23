@@ -140,9 +140,6 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     }
   }
 
-  //TODO Implement normalized
-  // - Modify songForm
-  // - link key from albumID ---> songID (one-to-many relationship)
   //TODO implement basic auth
   // - make private db/space for each user
 
@@ -158,7 +155,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
     Playing.playingForm.bindFromRequest.fold(
       errorForm => {
         logger.warn(s"Form submission with error: ${errorForm.errors}")
-        Future.successful(Ok(views.html.playingForm(errorForm)))
+        Future.successful(Ok(views.html.playingForm(errorForm, albumSongDAO)))
       },
       data => {
         playingDAO.addPlaying(data.artist, data.song).map(_ => Redirect(routes.HomeController.playing()).flashing("success" -> "songs.played"))
@@ -167,7 +164,6 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   }
 
   // TODO: implement playing songs
-
 
   def timeListened() = Action.async { implicit request =>
     albumSongDAO.timeListened().map(time => Ok(Json.toJson(time)))

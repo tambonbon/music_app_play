@@ -7,5 +7,5 @@ target
 /.settings
 /RUNNING_PID
 /project
-/data
-/music_app_play/
+/data/
+/music_app_play/data/
