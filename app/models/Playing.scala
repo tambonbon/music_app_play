@@ -14,6 +14,7 @@ object Playing  {
     mapping(
       "artist" -> text,
       "song" -> text
+//      "duration" -> localTime
     )(CreatePlayingForm.apply)(CreatePlayingForm.unapply)
   )
 }

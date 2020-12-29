@@ -48,4 +48,8 @@ class SongDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvid
   def getMostRecentSong: Future[Int] = dbConfig.db.run {
     songs.sortBy(_.songId.desc).take(1).map(_.songId).result.head
   }
+
+  def getSongIdFromSong(song: String): Future[Int] = dbConfig.db.run {
+    songs.filter(_.title === song).map(_.songId).result.head
+  }
 }

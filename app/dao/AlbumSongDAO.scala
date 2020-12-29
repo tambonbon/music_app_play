@@ -1,7 +1,5 @@
 package dao
 
-import java.time.LocalTime
-
 import com.google.inject.ImplementedBy
 import javax.inject.Inject
 import models.{AlbumSong, Albums, Songs}
@@ -72,43 +70,6 @@ class AlbumSongImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProv
         val songs   = value.map(_._2.title).toList
         (artist -> songs)
       }.toMap
-
-
     }
-  }
-
-//  def artistAndSong(): Future[Seq[CreatePlayingForm]] = {
-//    val query = albums
-//      .join(albumSongs).on(_.id === _.albumID)
-//      .join(songs).on(_._2.songID === _.songId)
-//
-//    dbConfig.db.run(query.result).map { playing =>
-//      val artists = playing.map(_._1._1.artist) //maybe there's a bug // it was playing.map(_._1._1.artist)
-//      val songs  = playing.map(_._2.title)
-//      for (
-//        artist <- artists;
-//        song <- songs) yield {
-//        CreatePlayingForm(artist, song)
-//      }
-//        // TODO: This is a list of all possible combination
-//        //  - Change this
-//    }
-//  }
-
-  def timeListened(): Future[LocalTime] = {
-    val query = albums
-      .join(albumSongs).on(_.id === _.albumID)
-      .join(songs).on(_._2.songID === _.songId)
-
-    val b = dbConfig.db.run(query.result).map { alb =>
-      alb.groupBy(_._1._1.genre).map { case (str, value) => // TODO: Why genre?
-        val duration = value.map(_._2.duration)
-        val a = duration.reduce( (p,q) =>
-          p.plusHours(q.getHour).plusMinutes(q.getMinute).plusSeconds(q.getSecond)
-        )
-        a
-      }.head
-    }
-    b
   }
 }

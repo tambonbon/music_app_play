@@ -14,7 +14,6 @@ import scala.concurrent.duration.DurationDouble
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
-
 class HomeController @Inject()(cc: MessagesControllerComponents,
                               userDAO: UserDAO,
                               authenticateAction: AuthenticateAction,
@@ -132,7 +131,7 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
         },
         data => {
           songDAO.addSong(data.title, data.duration)
-          albumSongDAO.normalized(Await.result(albumDAO.getMostRecentAlbum, 0.1 seconds), // TODO: Change this to current album
+          albumSongDAO.normalized(Await.result(albumDAO.getMostRecentAlbum, 0.1 seconds),
             Await.result(songDAO.getMostRecentSong ,0.1 seconds)) // THIS IS NOT RECOMMENDED
             .map(_ => Redirect(routes.HomeController.addSong()).flashing("success" -> "songs.created"))
         }
@@ -151,6 +150,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 //    albumSongDAO.artistAndSong().map(play => Ok(Json.toJson(play)))
 //  }
 
+  def playingForm() = Action {implicit request =>
+    Ok(views.html.playingForm(Playing.playingForm, albumSongDAO))
+  }
   def playing() = Action.async{ implicit request =>
     Playing.playingForm.bindFromRequest.fold(
       errorForm => {
@@ -158,15 +160,24 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
         Future.successful(Ok(views.html.playingForm(errorForm, albumSongDAO)))
       },
       data => {
-        playingDAO.addPlaying(data.artist, data.song).map(_ => Redirect(routes.HomeController.playing()).flashing("success" -> "songs.played"))
+        playingDAO.addPlaying(data.artist, data.song)
+        playingDAO.normalized(Await.result(albumDAO.getAlbumIdFromArtist(data.artist), 0.1 seconds),
+                              Await.result(songDAO.getSongIdFromSong(data.song), 0.1 seconds),
+                              Await.result(playingDAO.getMostRecentPlaying       , 0.1 seconds))
+                                .map(_ => Redirect(routes.HomeController.playing()).flashing("success" -> "songs.played"))
       }
     )
   }
 
   // TODO: implement playing songs
+  //  - make songs mapping with artist accordingly
 
   def timeListened() = Action.async { implicit request =>
-    albumSongDAO.timeListened().map(time => Ok(Json.toJson(time)))
+    playingDAO.timeListened().map(time => Ok(Json.toJson(time)))
+  }
+
+  def numbersOfPlaying = Action.async { implicit request =>
+    playingDAO.numbersOfPlaying().map(times => Ok(Json.toJson(times)))
   }
 
   def getAlbums() = Action.async { implicit request =>
@@ -175,6 +186,10 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
 
   def getSongs() = Action.async { implicit request =>
     songDAO.allSongs().map (alb => Ok(Json.toJson(alb)))
+  }
+
+  def getPlayings() = Action.async { implicit request =>
+    playingDAO.allPlaying().map (alb => Ok(Json.toJson(alb)))
   }
 }
 

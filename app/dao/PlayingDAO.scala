@@ -1,16 +1,14 @@
 package dao
 
+import java.time.LocalTime
+
 import com.google.inject.ImplementedBy
-import controllers.CreatePlayingForm
 import javax.inject.Inject
-import models.Playing
-import play.api.data.Form
-import play.api.data.Forms.{mapping, text}
+import models._
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
 
-import scala.concurrent.duration.DurationDouble
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 trait PlayingComponent extends AlbumComponent with SongComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
@@ -18,6 +16,7 @@ trait PlayingComponent extends AlbumComponent with SongComponent { self: HasData
 
   val albums = TableQuery[AlbumTable]
   val songs = TableQuery[SongTable]
+  val playings = TableQuery[PlayingTable]
 
   class PlayingTable(tag: Tag) extends Table[Playing](tag, "playing") {
     def playingId = column[Int]("playingId", O.PrimaryKey)
@@ -26,50 +25,32 @@ trait PlayingComponent extends AlbumComponent with SongComponent { self: HasData
 
     def * = (playingId, artist, song) <> ((Playing.apply _).tupled, Playing.unapply)
   }
+
+  class PlayingSongTable(tag: Tag) extends Table[PlayingSong](tag, "playing_song") {
+    def playingId = column[Int]("playingId")
+    def songId = column[Int]("songId")
+    def albumId = column[Int]("albumId")
+    def playingFK = foreignKey("playing_fk", playingId, playings)(_.playingId, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
+    def songFK = foreignKey("song_fk", songId, songs)(_.songId, onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
+    def albumFK = foreignKey("album_fk", albumId, albums)(_.id,onUpdate = ForeignKeyAction.Restrict, onDelete = ForeignKeyAction.Restrict)
+
+    def * = (albumId, songId, playingId) <> ((PlayingSong.apply _).tupled, PlayingSong.unapply)
+
+  }
 }
 
 @ImplementedBy(classOf[PlayingDAOImpl])
 trait PlayingDAO {
   def addPlaying(artist: String, title: String): Future[Playing]
+  def allPlaying(): Future[Seq[Playing]]
 }
 
 class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext)
   extends HasDatabaseConfigProvider[JdbcProfile] with PlayingComponent with PlayingDAO {
   import profile.api._
 
-  private val playings = TableQuery[PlayingTable]
-
-  def validate(artist: String, song: String) = Future.successful {
-    if (Await.result(hasArtist(artist), 0.1 seconds)) { // AGAIN THIS IS NOT RECOMMENDED
-      if (Await.result(hasSong(song), 0.1 seconds)) {
-        Some(CreatePlayingForm(artist, song))
-      }
-      else None
-    }
-    else None
-  }
-
-  val playingForm: Form[CreatePlayingForm] = Form (
-    mapping (
-      "artist" -> text,
-      "song" -> text// TODO: Add constraint so that it will only accept songs from the database
-    )(CreatePlayingForm.apply)(CreatePlayingForm.unapply)
-      .verifying(
-      fields => fields match {
-        case data => validate(data.artist, data.song).isCompleted
-      }
-    )
-  )
-
-  def hasArtist(artist: String): Future[Boolean] = dbConfig.db.run {
-    albums.map(art => art.artist === artist).result.head
-  }
-  def hasSong(song: String): Future[Boolean] = dbConfig.db.run {
-    songs.map(sng => sng.title === song).result.head
-  }
-
-  // TODO: hasSong is more complicated than this
-  //  - it should validate the artist too (a song with same name but different singer)
+  override val playings = TableQuery[PlayingTable]
+  private val playingSongs = TableQuery[PlayingSongTable]
 
   def addPlaying(artist: String, title: String): Future[Playing] = dbConfig.db.run {
     (playings.map(plg => (plg.artist, plg.song))
@@ -77,5 +58,51 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
       into ((theRest, id) => Playing(id, theRest._1, theRest._2))
       ) += (artist, title)
   }
+
+  def allPlaying(): Future[Seq[Playing]] = dbConfig.db.run {
+    playings.result
+  }
+
+  def normalized(albumID: Int, songID: Int, playingID: Int): Future[Unit] = dbConfig.db.run{
+    (playingSongs += PlayingSong(albumID, songID, playingID)).map(_ => ())
+  }
+
+  def getMostRecentPlaying: Future[Int] = dbConfig.db.run {
+    playings.sortBy(_.playingId.desc).take(1).map(_.playingId).result.head
+  }
+
+  def timeListened(): Future[Seq[(String, LocalTime)]] = {
+    val query = playings
+      .join(playingSongs).on(_.playingId ===_.playingId )
+      .join(albums).on(_._2.albumId === _.id)
+      .join(songs).on(_._1._2.songId === _.songId)
+
+    dbConfig.db.run(query.result).map { alb =>
+      alb.groupBy(_._1._2.genre).map { case (str, value) =>
+        val duration = value.map(_._2.duration)
+        val a = duration.reduce( (p,q) =>
+          p.plusHours(q.getHour).plusMinutes(q.getMinute).plusSeconds(q.getSecond)
+        )
+        (str, a)
+      }.toSeq
+    }
+  }
+
+  def numbersOfPlaying(): Future[Vector[NumbersPlaying]] =  {
+    val query =
+sql"""SELECT "artist", "title", COUNT(*)
+     FROM playing_song ps
+     JOIN albums
+     ON "albumId" = "id"
+     JOIN songs s
+     ON ps."songId" = s."songId"
+     GROUP BY "albumId", "title", "artist"
+     HAVING COUNT(*) >= 1
+     ORDER BY COUNT(*) DESC""".as[NumbersPlaying]
+
+    dbConfig.db.run(query).map(_.take(5))
+  }
+  // TODO: top 5 songs over all people combined
+  //  - Need auth
 
 }

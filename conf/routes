@@ -22,9 +22,12 @@ GET         /songs               controllers.HomeController.getSongs()
 
 GET         /all-albums               controllers.HomeController.all_albums()
 
-GET         /playing               controllers.HomeController.playing()
+GET         /playing               controllers.HomeController.playingForm()
+POST        /playing                controllers.HomeController.playing()
+GET         /all-playings           controllers.HomeController.getPlayings()
 
 GET         /time-listen         controllers.HomeController.timeListened()
 
+GET         /numbers-playing controllers.HomeController.numbersOfPlaying()
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)

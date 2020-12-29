@@ -67,4 +67,7 @@ class AlbumDAOImpl @Inject()(protected val dbConfigProvider: DatabaseConfigProvi
     albums.sortBy(_.id.desc).take(1).map(_.id).result.head
   }
 
+  def getAlbumIdFromArtist(artist: String): Future[Int] = dbConfig.db.run {
+    albums.filter(_.artist === artist).map(_.id).result.head
+  }
 }
