@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
   "com.h2database" % "h2" % "1.4.199",
   specs2 % Test,
   evolutions,
+  ws,
+  "commons-codec" % "commons-codec" % "1.14"
 )
 
 // Adds additional packages into Twirl

@@ -19,24 +19,13 @@ class AuthenticateAction @Inject() (val parser: BodyParsers.Default,
 
   def transform[A](request: Request[A]) = Future.successful {
     val tokenOpt = request.session.get("Username")
-    val user = tokenOpt
+    val user = (tokenOpt
       .flatMap(tk => SessionDAO.getToken(tk))
       .filter(_.expiration.isAfter(LocalDateTime.now(ZoneOffset.UTC)))
       .map(_.username)
-      .flatMap(userDAO.getUser)
+      .flatMap(userDAO.getUser))
 
     new AuthenticateRequest(user, request)
-//    userOpt match {
-//      case None => {
-//        logger.info("Invalid username")
-//        Future.successful(Forbidden("Unsuccessful login"))
-//      }
-//      case Some(u) => {
-//        logger.info("Valid username")
-//        val res: Future[Result] = block(request)
-//        res
-//      }
-//    }
   }
 }
 
