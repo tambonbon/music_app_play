@@ -19,7 +19,9 @@ libraryDependencies ++= Seq(
   specs2 % Test,
   evolutions,
   ws,
-  "commons-codec" % "commons-codec" % "1.14"
+  "commons-codec" % "commons-codec" % "1.14",
+  "org.mockito" %% "mockito-scala" % "1.16.0",
+  jdbc % Test
 )
 
 // Adds additional packages into Twirl

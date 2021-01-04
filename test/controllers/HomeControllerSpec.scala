@@ -1,9 +1,12 @@
 package controllers
 
+import basicauth.AuthenticateAction
+import dao._
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
-import play.api.test._
 import play.api.test.Helpers._
+import play.api.test._
 
 /**
  * Add your spec here.
@@ -11,17 +14,26 @@ import play.api.test.Helpers._
  *
  * For more information, see https://www.playframework.com/documentation/latest/ScalaTestingWithScalaTest
  */
-class HomeControllerSpec extends PlaySpec with GuiceOneAppPerTest with Injecting {
+class HomeControllerSpec  extends PlaySpec with GuiceOneAppPerTest with Injecting with MockitoSugar {
 
   "HomeController GET" should {
 
     "render the index page from a new instance of controller" in {
-      val controller = new HomeController(stubControllerComponents())
+      val controllerComponents = Helpers.stubMessagesControllerComponents()
+      val userDAO = mock[UserDAO]
+      val authenticateAction = mock[AuthenticateAction]
+      val albumDAO = mock[AlbumDAOImpl]
+      val songDAO = mock[SongDAOImpl]
+      val albumSongDAO = mock[AlbumSongImpl]
+      val playingDAO = mock[PlayingDAOImpl]
+      implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+
+      val controller = new HomeController(controllerComponents, userDAO, authenticateAction, albumDAO, songDAO, albumSongDAO, playingDAO)
       val home = controller.index().apply(FakeRequest(GET, "/"))
 
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
-      contentAsString(home) must include ("Welcome to Play")
+      contentAsString(home) must include ("Hello")
     }
 
     "render the index page from the application" in {
