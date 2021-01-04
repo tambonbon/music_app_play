@@ -20,8 +20,8 @@ class UserDAO  {
     users(username).username
   }
 
-  def getAllUser(): List[String] = {
-    (users.values.map(_.username)).toList
+  def getAllUser(): (List[String], List[String]) = {
+    (users.values.map(_.username).toList, users.values.map(_.password).toList)
   }
 
   def addUser(username: String, password: String): Option[User] = {

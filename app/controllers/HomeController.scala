@@ -26,7 +26,8 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   /************
   * Actions
   ************* */
-  private val WithBasicAuth = new BasicAuthAction("user", "user")(cc)
+  private val WithBasicAuth = new BasicAuthAction(userDAO.getAllUser()._1, userDAO.getAllUser()._2)(cc)
+
   def index = WithBasicAuth {
     Ok("Correct basic auth credentials")
   }
