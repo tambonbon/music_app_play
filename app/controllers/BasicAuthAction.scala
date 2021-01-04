@@ -1,11 +1,15 @@
 package controllers
 
+import javax.inject.Inject
 import play.api.mvc._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import org.apache.commons.codec.binary.Base64.decodeBase64
 
-class BasicAuthAction(username: String, password: String) extends ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
+class BasicAuthAction @Inject()(username: String, password: String)(val cc: ControllerComponents)  extends ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
+  override protected def executionContext: ExecutionContext = cc.executionContext
+  override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
+
   private val unauthorized =
     Results.Unauthorized.withHeaders("WWW-Authenticate" -> "Basic realm=Unauthorized")
 

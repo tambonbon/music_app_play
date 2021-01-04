@@ -26,8 +26,9 @@ class HomeController @Inject()(cc: MessagesControllerComponents,
   /************
   * Actions
   ************* */
-  def index = Action { implicit request =>
-    Ok(views.html.index(User.loginForm))
+  private val WithBasicAuth = new BasicAuthAction("user", "user")(cc)
+  def index = WithBasicAuth {
+    Ok("Correct basic auth credentials")
   }
 
   def login() = {
