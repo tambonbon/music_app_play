@@ -5,9 +5,9 @@
 
 # An example controller showing a sample home page
 GET         /                    controllers.HomeController.index
-GET         /login               controllers.HomeController.login
+#GET         /login               controllers.HomeController.login
 #GET     /loginBA                    controllers.HomeController.loginBA(username, password)
-GET     /privAction                    controllers.HomeController.privateRequest()
+#GET     /privAction                    controllers.HomeController.privateRequest()
 
 GET         /addAlbum            controllers.HomeController.addAlbumForm
 POST        /addAlbum            controllers.HomeController.addAlbum

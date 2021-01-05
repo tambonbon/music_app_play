@@ -1,9 +1,9 @@
 @import views.html.helper._
-@(albums: Form[CreateAlbumForm])(implicit request: MessagesRequestHeader)
+@(albums: Form[CreateAlbumForm])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
-@request.flash.get("success").map { key =>
-    @request.messages(key)
-}
+@*//@request.flash.get("success").map { key =>*@
+@*//    @request.messages(key)*@
+@*//}*@
 
 @main("Add your album here") {
     @helper.form(routes.HomeController.addAlbum()) {

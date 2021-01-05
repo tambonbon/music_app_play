@@ -1,21 +1,14 @@
-@(log: Form[CreateLoginForm])(implicit  request: MessagesRequestHeader)
 @import views.html.helper._
-@request.flash.get("success").map { key =>
-  @request.messages(key)
-}
+
 @main("Welcome to Play") {
   <h1>Welcome to Play Music App!</h1>
-  @helper.form(routes.HomeController.login()){
-    @inputText(log("username"),
-    '_label -> "Username")
-    @inputPassword(log("password"),
-    '_label -> "Password")
 
-    <a href=@routes.HomeController.privateRequest()> <input type="submit" value="Submit"></a>
-  }
   <ul>
-@*    <li><a href=@routes.HomeController.login("Werner", "werner")>Login as Werner</a></li>*@
-@*    <li><a href=@routes.HomeController.login("Daniel", "daniel")>Login as Daniel</a></li>*@
+    <li><a href=@routes.HomeController.addAlbum()>Add album here</a></li>
+    <li><a href=@routes.HomeController.all_albums()>Your albums are here</a></li>
+    <li><a href=@routes.HomeController.playing()>What are you listening?</a></li>
+    <li><a href=@routes.HomeController.timeListened()>Time listened of each genre?</a></li>
+    <li><a href=@routes.HomeController.numbersOfPlaying()>Top 5 songs of all users</a></li>
 
   </ul>
 }

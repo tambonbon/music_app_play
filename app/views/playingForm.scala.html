@@ -4,11 +4,11 @@
 @import scala.concurrent.duration.DurationDouble
 @import scala.language.postfixOps
 @import dao.AlbumSongDAO
-@(playing: Form[CreatePlayingForm], as: AlbumSongDAO)(implicit request: MessagesRequestHeader)
+@(playing: Form[CreatePlayingForm], as: AlbumSongDAO)(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
-@request.flash.get("success").map { key =>
-    @request.messages(key)
-}
+@*//@request.flash.get("success").map { key =>*@
+@*//    @request.messages(key)*@
+@*//}*@
 
 @main("What are you listening to?") {
 

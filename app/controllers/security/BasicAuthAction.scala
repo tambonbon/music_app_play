@@ -1,12 +1,13 @@
-package controllers
+package controllers.security
 
 import javax.inject.Inject
+import org.apache.commons.codec.binary.Base64.decodeBase64
 import play.api.mvc._
 
 import scala.concurrent.{ExecutionContext, Future}
-import org.apache.commons.codec.binary.Base64.decodeBase64
 
-class BasicAuthAction @Inject()(username: List[String], password: List[String])(val cc: ControllerComponents)  extends ActionBuilder[Request, AnyContent] with ActionFilter[Request] {
+class BasicAuthAction @Inject()(username: List[String], password: List[String])(val cc: ControllerComponents)
+  extends ActionBuilder[Request, AnyContent] with ActionFilter[Request]  {
   override protected def executionContext: ExecutionContext = cc.executionContext
   override def parser: BodyParser[AnyContent] = cc.parsers.defaultBodyParser
 
@@ -22,10 +23,9 @@ class BasicAuthAction @Inject()(username: List[String], password: List[String])(
     Future.successful(result)
   }
 
-  private [this] def decodeBasicAuth(authHeader: String): (String, String) = {
-    val baStr = authHeader.replaceFirst("Basic ", "")
-//    val decoded = new decodeBase64
-    val Array(user, password) = new String(decodeBase64(baStr)).split(":")
+  private def decodeBasicAuth(authHeader: String): (String, String) = {
+    val baString = authHeader.replaceFirst("Basic ", "")
+    val Array(user, password) = new String(decodeBase64(baString)).split(":")
     (user, password)
   }
 }

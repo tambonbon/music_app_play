@@ -1,7 +1,7 @@
 @(user: User)
 @main("This is a private page") {
     <h1>This is a private page</h1>
-    <p>Current user: <strong>@user.username</strong> </p>
+    <p>Current user: <strong>@user</strong> </p>
     <li><a href=@routes.HomeController.addAlbum()>Add album here</a></li>
     <li><a href=@routes.HomeController.all_albums()>Your albums are here</a></li>
     <li><a href=@routes.HomeController.playing()>What are you listening?</a></li>
