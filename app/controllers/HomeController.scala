@@ -112,14 +112,14 @@ class HomeController @Inject()(cc: ControllerComponents,
   //  - make songs mapping with artist accordingly
 
   def timeListened() = Action.async { implicit request =>
-    playingDAO.timeListened().map(time => Ok(Json.toJson(time)))
+    playingDAO.timeListened(WithBasicAuth.getUser(request).get).map(time => Ok(Json.toJson(time)))
   }
 
-  def top5Personal = Action.async { implicit request =>
+  def top5Personal() = Action.async { implicit request =>
     playingDAO.top5Personal(WithBasicAuth.getUser(request).get).map(times => Ok(Json.toJson(times)))
   }
 
-  def top5All = Action.async { implicit request =>
+  def top5All() = Action.async { implicit request =>
     playingDAO.top5All().map(times => Ok(Json.toJson(times)))
   }
 

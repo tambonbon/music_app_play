@@ -72,15 +72,15 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     playings.sortBy(_.playingId.desc).take(1).map(_.playingId).result.head
   }
 
-  // TODO: filter to current user only
-  def timeListened(): Future[Seq[(String, LocalTime)]] = {
+  def timeListened(user: String): Future[Seq[(String, LocalTime)]] = {
     val query = playings
       .join(playingSongs).on(_.playingId ===_.playingId )
       .join(albums).on(_._2.albumId === _.id)
       .join(songs).on(_._1._2.songId === _.songId)
 
     dbConfig.db.run(query.result).map { alb =>
-      alb.groupBy(_._1._2.genre).map { case (str, value) =>
+      alb.filter(_._1._1._1.user == user)
+      .groupBy(_._1._2.genre).map { case (str, value) =>
         val duration = value.map(_._2.duration)
         val a = duration.reduce( (p,q) =>
           p.plusHours(q.getHour).plusMinutes(q.getMinute).plusSeconds(q.getSecond)
