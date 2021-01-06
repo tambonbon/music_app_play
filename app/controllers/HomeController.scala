@@ -87,16 +87,19 @@ class HomeController @Inject()(cc: ControllerComponents,
 //  }
 //  implicit val header = new MessagesRequestHeader
   def playingForm() = WithBasicAuth {implicit request =>
-    Ok(views.html.playingForm(Playing.playingForm, albumSongDAO))
+//  request.
+    Ok(views.html.playingForm(WithBasicAuth, Playing.playingForm, albumSongDAO))
   }
   def playing() = Action.async { implicit request =>
     Playing.playingForm.bindFromRequest.fold(
       errorForm => {
         logger.warn(s"Form submission with error: ${errorForm.errors}")
-        Future.successful(Ok(views.html.playingForm(errorForm, albumSongDAO)))
+        Future.successful(Ok(views.html.playingForm(WithBasicAuth, errorForm, albumSongDAO)))
       },
       data => {
-        playingDAO.addPlaying(data.artist, data.song)
+        playingDAO.addPlaying(data.artist, data.song, WithBasicAuth.getUser(request).get)
+        // TODO: data.user is WithBasicAuth.getUser
+        //  - how to get getUser to here?
         playingDAO.normalized(Await.result(albumDAO.getAlbumIdFromArtist(data.artist), 0.1 seconds),
                               Await.result(songDAO.getSongIdFromSong(data.song), 0.1 seconds),
                               Await.result(playingDAO.getMostRecentPlaying       , 0.1 seconds))
@@ -112,8 +115,12 @@ class HomeController @Inject()(cc: ControllerComponents,
     playingDAO.timeListened().map(time => Ok(Json.toJson(time)))
   }
 
-  def numbersOfPlaying = Action.async { implicit request =>
-    playingDAO.numbersOfPlaying().map(times => Ok(Json.toJson(times)))
+  def top5Personal = Action.async { implicit request =>
+    playingDAO.top5Personal(WithBasicAuth.getUser(request).get).map(times => Ok(Json.toJson(times)))
+  }
+
+  def top5All = Action.async { implicit request =>
+    playingDAO.top5All().map(times => Ok(Json.toJson(times)))
   }
 
   def getAlbums() = Action.async { implicit request =>
@@ -132,4 +139,4 @@ class HomeController @Inject()(cc: ControllerComponents,
 case class CreateLoginForm(username: String, password: String)
 case class CreateAlbumForm(artist: String, name: String, genre: String )
 case class CreateSongForm(title: String, duration: LocalTime)
-case class CreatePlayingForm(artist: String, song: String)
+case class CreatePlayingForm(artist: String, song: String, user: String)

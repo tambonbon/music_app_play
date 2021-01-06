@@ -22,8 +22,9 @@ trait PlayingComponent extends AlbumComponent with SongComponent { self: HasData
     def playingId = column[Int]("playingId", O.PrimaryKey)
     def artist = column[String]("artist")
     def song = column[String]("song")
+    def user = column[String]("user")
 
-    def * = (playingId, artist, song) <> ((Playing.apply _).tupled, Playing.unapply)
+    def * = (playingId, artist, song, user) <> ((Playing.apply _).tupled, Playing.unapply)
   }
 
   class PlayingSongTable(tag: Tag) extends Table[PlayingSong](tag, "playing_song") {
@@ -41,7 +42,7 @@ trait PlayingComponent extends AlbumComponent with SongComponent { self: HasData
 
 @ImplementedBy(classOf[PlayingDAOImpl])
 trait PlayingDAO {
-  def addPlaying(artist: String, title: String): Future[Playing]
+  def addPlaying(artist: String, title: String, user: String): Future[Playing]
   def allPlaying(): Future[Seq[Playing]]
 }
 
@@ -52,11 +53,11 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
   override val playings = TableQuery[PlayingTable]
   private val playingSongs = TableQuery[PlayingSongTable]
 
-  def addPlaying(artist: String, title: String): Future[Playing] = dbConfig.db.run {
-    (playings.map(plg => (plg.artist, plg.song))
+  def addPlaying(artist: String, title: String, user: String): Future[Playing] = dbConfig.db.run {
+    (playings.map(plg => (plg.artist, plg.song, plg.user))
       returning playings.map(_.playingId)
-      into ((theRest, id) => Playing(id, theRest._1, theRest._2))
-      ) += (artist, title)
+      into ((theRest, id) => Playing(id, theRest._1, theRest._2, theRest._3))
+      ) += (artist, title, user)
   }
 
   def allPlaying(): Future[Seq[Playing]] = dbConfig.db.run {
@@ -71,6 +72,7 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     playings.sortBy(_.playingId.desc).take(1).map(_.playingId).result.head
   }
 
+  // TODO: filter to current user only
   def timeListened(): Future[Seq[(String, LocalTime)]] = {
     val query = playings
       .join(playingSongs).on(_.playingId ===_.playingId )
@@ -88,7 +90,27 @@ class PlayingDAOImpl @Inject() (protected val dbConfigProvider: DatabaseConfigPr
     }
   }
 
-  def numbersOfPlaying(): Future[Vector[NumbersPlaying]] =  {
+  // TODO: The following queries are plain sql
+  //  - It is recommended to revert back to slick dsl
+
+  def top5Personal(user: String): Future[Vector[NumbersPlaying]] =  {
+    val query =
+      sql"""SELECT p."artist", "title", COUNT(*)
+     FROM playing_song ps
+     JOIN albums
+     ON "albumId" = "id"
+     JOIN songs s
+     ON ps."songId" = s."songId"
+     JOIN playing p
+     ON p."playingId" = ps."playingId"
+     GROUP BY "albumId", "title", p."artist", p."user"
+     HAVING COUNT(*) >= 1 AND p."user" = $user
+     ORDER BY COUNT(*) DESC""".as[NumbersPlaying]
+
+    dbConfig.db.run(query).map(_.take(5))
+  }
+
+  def top5All(): Future[Vector[NumbersPlaying]] =  {
     val query =
 sql"""SELECT "artist", "title", COUNT(*)
      FROM playing_song ps
@@ -102,7 +124,4 @@ sql"""SELECT "artist", "title", COUNT(*)
 
     dbConfig.db.run(query).map(_.take(5))
   }
-  // TODO: top 5 songs over all people combined
-  //  - Need auth
-
 }

@@ -17,5 +17,5 @@ object NumbersPlaying {
     (__ \ "song").read[String] and
     (__ \ "numbers of playing").read[Int]
   )(NumbersPlaying.apply _)
-  implicit val getResult = GetResult(r => NumbersPlaying(r.<<, r.<<, r.<<))
+  implicit val getResult = GetResult(r => NumbersPlaying(r.<<, r.<<, r.<<)) // for sql interpolator
 }

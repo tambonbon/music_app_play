@@ -26,7 +26,8 @@ GET         /all-playings           controllers.HomeController.getPlayings()
 
 GET         /time-listen         controllers.HomeController.timeListened()
 
-GET         /numbers-playing     controllers.HomeController.numbersOfPlaying()
+GET         /top-5-all     controllers.HomeController.top5All()
+GET         /top-5-personal     controllers.HomeController.top5Personal()
 # Map static resources from the /public folder to the /assets URL path
 GET         /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)
 

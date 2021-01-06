@@ -28,4 +28,13 @@ class BasicAuthAction @Inject()(username: List[String], password: List[String])(
     val Array(user, password) = new String(decodeBase64(baString)).split(":")
     (user, password)
   }
+
+  def getUser[A](request: Request[A]): Option[String] = {
+    val result = request.headers.get("Authorization") map { authHeader =>
+      val (user, pass) = decodeBasicAuth(authHeader)
+//      if (username.contains(user) && password.contains(pass)) None else Some(unauthorized)
+      user
+    }
+    result
+  }
 }

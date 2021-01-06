@@ -1,6 +1,7 @@
 @import views.html.helper._
 @(songs: Form[CreateSongForm])(implicit request: RequestHeader, messagesProvider: MessagesProvider)
 
+@request.flash.get("success")
 @*//@request.flash.get("success").map { key =>*@
 @*//    @request.messages(key)*@
 @*//}*@
