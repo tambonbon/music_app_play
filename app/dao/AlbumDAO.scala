@@ -1,7 +1,7 @@
 package dao
 
 import com.google.inject.ImplementedBy
-import javax.inject.{Inject,Singleton}
+import javax.inject.{Inject, Singleton}
 import models.Albums
 import play.api.db.slick.{DatabaseConfigProvider, HasDatabaseConfigProvider}
 import slick.jdbc.JdbcProfile
@@ -14,11 +14,11 @@ trait AlbumComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
 
   class AlbumTable(tag: Tag) extends Table[Albums](tag, "albums"){
-    def id = column[Int]("id", O.PrimaryKey)
+    implicit def id = column[Int]("id", O.AutoInc)
     def artist = column[String]("artist")
     def name = column[String]("name")
     def genre = column[String]("genre")
-
+    def pk = primaryKey("pk" , (artist, name))
     def * = (id, artist, name, genre) <> ((Albums.apply _).tupled, Albums.unapply)
   }
 }

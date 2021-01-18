@@ -17,12 +17,11 @@ object Albums {
     )
   }
 
-  implicit val albumReads: Reads[Albums] =  (
-    (__ \ "id").read[Int] and
-    (__ \ "artist").read[String] and
-    (__ \ "name").read[String] and
-    (__ \ "genre").read[String]
-  )(Albums.apply _)
+   implicit val albumReads: Reads[Albums] = (
+         (__ \ "artist").read[String] and
+         (__ \ "name").read[String] and
+         (__ \ "genre").read[String]
+   )((artist, name, genre) => Albums(1, artist, name, genre))
 
   val albumsForm: Form[CreateAlbumForm] = Form (
     mapping(

@@ -1,23 +1,28 @@
 package controllers
 
-import basicauth.AuthenticateAction
-import dao.{AlbumDAOImpl, AlbumSongImpl, PlayingDAOImpl, SongDAOImpl, UserDAO}
-import play.api.test.Helpers
+import dao.AlbumDAOImpl
+import models.Albums
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Reads, __}
+import play.api.test.Helpers.{GET, defaultAwaitTimeout}
+import play.api.test._
+
+import scala.language.postfixOps
 
 class AlbumsSpec  extends UnitTest ("Albums") {
-  it must {
-    val controllerComponents = Helpers.stubMessagesControllerComponents()
-    val userDAO = mock[UserDAO]
-    val authenticateAction = mock[AuthenticateAction]
-    val albumDAO = mock[AlbumDAOImpl]
-    val songDAO = mock[SongDAOImpl]
-    val albumSongDAO = mock[AlbumSongImpl]
-    val playingDAO = mock[PlayingDAOImpl]
-    implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
-    val controller = new HomeController(controllerComponents, userDAO, authenticateAction, albumDAO, songDAO, albumSongDAO, playingDAO)
+  "Albums page" must {
+    implicit val albumReader: Reads[Albums] = (
+      (__ \ "id").read[Int] and
+        (__ \ "artist").read[String] and
+        (__ \ "song").read[String] and
+        (__ \ "genre").read[String]
+      ) (Albums.apply _)
+    "show registered albums" in  {
+      val controller = inject[HomeController]
+      val all_albums = controller.index().apply(FakeRequest(GET, "/all-albums"))
+      val album = mock[AlbumDAOImpl]
 
-    "add albums from the form" in {
-
+      Helpers.contentAsJson(all_albums) mustBe()
     }
   }
 }

@@ -1,0 +1,120 @@
+###
+GET {{host}}
+
+###
+POST {{host}}/addAlbum-Json
+content-type: application/json
+
+{
+  "artist" : "Modern Talking",
+  "name" : "Brother Louie",
+  "genre" : "Electro-pop",
+  "songs" : [
+    {
+      "name": "Chery Chery Lady",
+      "duration": "00:04:02"
+    },
+    {
+      "name": "Brother Louie",
+      "duration": "00:04:15"
+    }
+  ]
+}
+###
+POST{{host}}/addAlbum-Json
+content-type: application/json
+
+{
+  "artist" : "Taylor Swift",
+  "name" : "Lover",
+  "genre" : "Pop",
+  "songs" : [
+    {
+      "name": "Red",
+      "duration": "00:03:09"
+    },
+    {
+      "name": "Lover",
+      "duration": "00:03:15"
+    }
+  ]
+}
+###
+POST{{host}}/addAlbum-Json
+content-type: application/json
+
+{
+  "artist" : "TWICE",
+  "name" : "Fancy",
+  "genre" : "K-Pop",
+  "songs" : [
+    {
+      "name": "Fancy",
+      "duration": "00:03:45"
+    }
+  ]
+}
+###
+
+GET {{host}}/songs
+
+###
+GET {{host}}/albums
+
+###
+GET {{host}}/all-albums
+
+###
+POST{{host}}/playing-Json
+content-type: application/json
+
+{
+  "id": 1,
+  "artist": "TWICE",
+  "song": "Fancy",
+  "user": "Werner"
+}
+
+###
+POST{{host}}/addAlbum-Json
+content-type: application/json
+
+{
+  "artist": "Michael Jackson",
+  "name": "Thriller",
+  "genre": "pop",
+  "songs": [
+    {
+      "name": "Billie Jean",
+      "duration": "00:04:54"
+    },
+    {
+      "name": "Beat It",
+      "duration": "00:04:18"
+    }
+  ]
+}
+
+###
+POST{{host}}/addAlbum-Json
+content-type: application/json
+
+{
+  "artist": "The Beatles Hahaaaa",
+  "name": "Sgt. Pepper",
+  "genre": "Rock",
+  "songs": [
+    {
+      "name": "Here comes the sun aan",
+      "duration": "00:04:04"
+    },
+    {
+      "name": "Yesterday soaao",
+      "duration": "00:03:18"
+    },
+    {
+      "name": "Hey Judeyyay",
+      "duration": "00:03:19"
+    }
+  ]
+}

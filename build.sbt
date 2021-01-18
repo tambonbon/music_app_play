@@ -21,7 +21,8 @@ libraryDependencies ++= Seq(
   ws,
   "commons-codec" % "commons-codec" % "1.14",
   "org.mockito" %% "mockito-scala" % "1.16.0",
-  jdbc % Test
+//  jdbc % Test
+  "org.json4s" %% "json4s-ast" % "3.6.10"
 )
 
 // Adds additional packages into Twirl

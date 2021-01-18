@@ -1,13 +1,10 @@
 package controllers
-
-import basicauth.AuthenticateAction
 import dao._
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play._
 import org.scalatestplus.play.guice._
 import play.api.test.Helpers._
 import play.api.test._
-
 /**
  * Add your spec here.
  * You can mock out a whole application including requests, plugins etc.
@@ -21,14 +18,13 @@ class HomeControllerSpec  extends PlaySpec with GuiceOneAppPerTest with Injectin
     "render the index page from a new instance of controller" in {
       val controllerComponents = Helpers.stubMessagesControllerComponents()
       val userDAO = mock[UserDAO]
-      val authenticateAction = mock[AuthenticateAction]
       val albumDAO = mock[AlbumDAOImpl]
       val songDAO = mock[SongDAOImpl]
       val albumSongDAO = mock[AlbumSongImpl]
       val playingDAO = mock[PlayingDAOImpl]
       implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
-      val controller = new HomeController(controllerComponents, userDAO, authenticateAction, albumDAO, songDAO, albumSongDAO, playingDAO)
+      val controller = new HomeController(controllerComponents, userDAO, albumDAO, songDAO, albumSongDAO, playingDAO)
       val home = controller.index().apply(FakeRequest(GET, "/"))
 
       status(home) mustBe OK
@@ -52,6 +48,10 @@ class HomeControllerSpec  extends PlaySpec with GuiceOneAppPerTest with Injectin
       status(home) mustBe OK
       contentType(home) mustBe Some("text/html")
       contentAsString(home) must include ("Welcome to Play")
+    }
+
+    "be reachable" in {
+//      val response = await()
     }
   }
 }

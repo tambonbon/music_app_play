@@ -5,7 +5,11 @@ create table "playing" (
   "artist" varchar not null,
   "song"   varchar not null
 );
-
+create table "playing_song" (
+  "albumId" int not null ,
+  "songId" int not null,
+  "playingId" int not null
+);
 # --- !Downs
 
 drop table "playing" if exists;

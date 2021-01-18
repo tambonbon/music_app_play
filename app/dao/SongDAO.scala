@@ -14,9 +14,10 @@ trait SongComponent { self: HasDatabaseConfigProvider[JdbcProfile] =>
   import profile.api._
 
   class SongTable(tag: Tag) extends Table[Songs](tag, "songs"){
-    def songId = column[Int]("songId", O.PrimaryKey)
+    def songId = column[Int]("songId", O.AutoInc)
     def title = column[String]("title")
     def duration = column[LocalTime]("duration")
+    def pk = primaryKey("pk" , (title, duration))
 
     def * = (songId, title, duration) <> ((Songs.apply _).tupled, Songs.unapply)
   }

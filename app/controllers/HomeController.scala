@@ -7,7 +7,7 @@ import dao._
 import javax.inject._
 import models._
 import play.api.Logging
-import play.api.libs.json.Json
+import play.api.libs.json.{JsError, Json}
 import play.api.mvc._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -27,7 +27,7 @@ class HomeController @Inject()(cc: ControllerComponents,
   /************
   * Actions
   ************* */
-  private val WithBasicAuth = new BasicAuthAction(userDAO.users.keys.toList, userDAO.users.values.toList)(cc)
+  private val WithBasicAuth = new BasicAuthAction(userDAO.setOfUser())(cc)
 
   def index = Action {
     Ok(views.html.index())
@@ -75,9 +75,29 @@ class HomeController @Inject()(cc: ControllerComponents,
     }
   }
 
-  //TODO implement basic auth
-  // - make private db/space for each user
+  //TODO Implement JSON parsed instead of filling in form
+// 1st story
+  def addAlbumJson = Action.async(parse.json) { request =>
+    val response = request.body.validate[FullAlbum]
+    response.fold(
+      errors => {
+        Future.successful(BadRequest(Json.obj("message" -> JsError.toJson(errors))))
+      },
+      newAlbum => { //TODO this should be NO id
+        val m = albumDAO.addAlbum(newAlbum.artist, newAlbum.name, newAlbum.genre)
+        for (
+          song <- newAlbum.songs
+        ) yield {
+          val a = songDAO.addSong(song.name, song.duration)
+          a
+          val b = a.map(_.id)
+          albumSongDAO.normalized(Await.result(m.map(_.id), 0.5 seconds), Await.result(b, 0.5 seconds))
+        }
+      Future.successful(Ok(Json.toJson(newAlbum)))
+      }
+    )
 
+  }
   def all_albums() = Action.async { implicit request =>
     albumSongDAO.findAll().map(alb => Ok(Json.toJson(alb)))
   }
@@ -98,8 +118,6 @@ class HomeController @Inject()(cc: ControllerComponents,
       },
       data => {
         playingDAO.addPlaying(data.artist, data.song, WithBasicAuth.getUser(request).get)
-        // TODO: data.user is WithBasicAuth.getUser
-        //  - how to get getUser to here?
         playingDAO.normalized(Await.result(albumDAO.getAlbumIdFromArtist(data.artist), 0.1 seconds),
                               Await.result(songDAO.getSongIdFromSong(data.song), 0.1 seconds),
                               Await.result(playingDAO.getMostRecentPlaying       , 0.1 seconds))
@@ -108,8 +126,19 @@ class HomeController @Inject()(cc: ControllerComponents,
     )
   }
 
-  // TODO: implement playing songs
-  //  - make songs mapping with artist accordingly
+//  1st story
+  def playingJson() = Action.async(parse.json) { implicit request =>
+    val response = request.body.validate[Playing]
+    response.fold(
+      errors => {
+        Future.successful(BadRequest(Json.obj("message" -> JsError.toJson(errors))))
+       },
+      data => {
+        playingDAO.addPlaying(data.artist, data.song, data.user)
+        Future.successful(Ok(Json.toJson(data)))
+      }
+    )
+  }
 
   def timeListened() = Action.async { implicit request =>
     playingDAO.timeListened(WithBasicAuth.getUser(request).get).map(time => Ok(Json.toJson(time)))
